@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hair Originals — AI Hair Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#3a3a3a;
+  --primary-light:#666666;
+  --primary-dark:#222222;
+  --secondary:#f6f3ee;
+  --secondary-dark:#e8e3db;
+  --accent:#d18e6c;
+  --accent-light:#e0a985;
+  --accent-dark:#b87350;
+  --white:#FFFFFF;
+  --bg:#faf8f5;
+  --text:#1A1A1A;
+  --text-mid:#5A5A5A;
+  --text-light:#8A8A8A;
+  --coral:#D4564E;
+  --coral-bg:#FDEAE7;
+  --amber:#D4924E;
+  --amber-bg:#FFF3E0;
+  --green:#4A9A7D;
+  --green-bg:#E0F5ED;
+  --r:20px;
+  --rs:12px;
+  --rp:50px;
+  --font:'Jost','Helvetica Neue',Arial,sans-serif;
+}
+html{height:100%;-webkit-text-size-adjust:100%}
+body{min-height:100%;background:var(--bg);font-family:var(--font);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ===== RESPONSIVE CONTAINER ===== */
+.app{width:100%;margin:0 auto;position:relative;overflow:hidden;min-height:100vh;background:var(--white)}
+@media(max-width:767px){.app{max-width:100%}}
+@media(min-width:768px) and (max-width:1023px){
+  body{background:#e0d8cf;display:flex;align-items:center;justify-content:center;padding:24px 0}
+  .app{max-width:480px;min-height:90vh;max-height:900px;border-radius:32px;box-shadow:0 20px 80px rgba(58,58,58,.15)}
+}
+@media(min-width:1024px){
+  body{background:#e0d8cf;display:flex;align-items:center;justify-content:center;padding:24px 0}
+  .app{max-width:480px;min-height:90vh;max-height:900px;border-radius:32px;box-shadow:0 20px 80px rgba(58,58,58,.15)}
+}
+
+/* Screens */
+.screens{position:relative;width:100%;min-height:100vh}
+@media(min-width:768px){.screens{min-height:90vh;max-height:900px}}
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;transition:transform .45s cubic-bezier(.4,0,.2,1),opacity .45s;opacity:0;transform:translateX(100%);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.screen.active{opacity:1;transform:translateX(0)}
+.screen.exit-left{opacity:0;transform:translateX(-30%)}
+
+/* Shared */
+.btn{display:block;width:calc(100% - 48px);margin:0 auto;padding:16px;background:var(--primary);color:var(--white);border:none;border-radius:var(--rp);text-align:center;font-family:var(--font);font-size:15px;font-weight:600;letter-spacing:.03em;cursor:pointer;transition:all .2s}
+.btn:hover{background:var(--primary-dark);transform:translateY(-1px);box-shadow:0 4px 16px rgba(58,58,58,.25)}
+.btn:active{transform:scale(.98)}
+.btn-accent{background:var(--accent);color:var(--white)}
+.btn-accent:hover{background:var(--accent-dark)}
+.btn-sm{display:inline-block;padding:10px 20px;font-size:12px;width:auto;margin:0;border-radius:var(--rp)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ===== SCREEN 1: LANDING ===== */
+.s1{background:var(--secondary);min-height:100%;display:flex;flex-direction:column}
+.s1-nav{display:flex;justify-content:space-between;align-items:center;padding:20px 24px}
+.s1-logo{font-family:var(--font);font-size:22px;font-weight:700;color:var(--primary);letter-spacing:.02em}
+.s1-nav-links{display:flex;gap:16px;font-size:12px;font-weight:600;color:var(--primary-light);text-transform:uppercase;letter-spacing:.08em}
+
+.s1-hero{padding:28px 28px 0;text-align:center;position:relative;overflow:hidden}
+.s1-hero::before{content:'';position:absolute;top:-60px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(209,142,108,.15),transparent 70%);border-radius:50%}
+.s1-eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--accent);font-weight:600;margin-bottom:10px;position:relative;z-index:1}
+.s1-title{font-family:var(--font);font-size:30px;font-weight:700;line-height:1.15;color:var(--primary);position:relative;z-index:1}
+@media(max-width:374px){.s1-title{font-size:26px}}
+.s1-title em{font-style:italic;color:var(--accent)}
+.s1-sub{font-size:14px;color:var(--text-mid);margin:12px auto 0;position:relative;z-index:1;max-width:340px;line-height:1.6}
+.s1-time{display:inline-flex;align-items:center;gap:8px;background:var(--primary);color:var(--white);border-radius:var(--rp);padding:10px 22px;font-size:14px;font-weight:700;margin:18px auto 0;position:relative;z-index:1;letter-spacing:.03em}
+.s1-time-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 1.5s ease infinite;box-shadow:0 0 6px rgba(74,154,125,.5)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.s1-cta{padding:22px 24px 0;position:relative;z-index:1}
+.s1-cta .btn{font-size:16px;padding:18px;box-shadow:0 6px 24px rgba(209,142,108,.25);background:var(--accent)}
+.s1-cta .btn:hover{background:var(--accent-dark)}
+.s1-cta-sub{text-align:center;font-size:11px;color:var(--text-light);margin-top:8px}
+
+.s1-detect{padding:20px 24px 0;position:relative;z-index:1}
+.s1-detect-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-light);font-weight:600;text-align:center;margin-bottom:10px}
+.s1-detect-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.s1-detect-tag{padding:6px 14px;background:var(--white);border-radius:var(--rp);font-size:12px;font-weight:500;color:var(--primary);border:1px solid var(--secondary-dark)}
+
+.s1-how{padding:22px 24px 0;position:relative;z-index:1}
+.s1-how-title{font-family:var(--font);font-size:18px;font-weight:700;color:var(--primary);text-align:center;margin-bottom:14px}
+.s1-steps{display:flex;flex-direction:column;gap:8px}
+.s1-step{display:flex;align-items:center;gap:14px;background:var(--white);border-radius:var(--rs);padding:14px 16px;border:1px solid var(--secondary-dark)}
+.s1-step-num{width:32px;height:32px;border-radius:50%;background:var(--primary);color:var(--white);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0}
+.s1-step-text{flex:1;font-size:14px;font-weight:600;color:var(--primary)}
+.s1-step-text span{font-weight:400;color:var(--text-mid);font-size:12px;display:block;margin-top:2px;line-height:1.4}
+
+.s1-promise{padding:20px 24px;position:relative;z-index:1}
+.s1-promise-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.s1-promise-item{background:var(--white);border-radius:var(--rs);padding:14px;text-align:center;border:1px solid var(--secondary-dark)}
+.s1-promise-icon{font-size:22px;margin-bottom:4px}
+.s1-promise-label{font-size:11px;font-weight:600;color:var(--primary);line-height:1.3}
+.s1-promise-sub{font-size:10px;color:var(--text-light);margin-top:2px}
+
+.s1-trust{display:flex;justify-content:space-around;padding:0 16px 28px;position:relative;z-index:1}
+.s1-trust-item{text-align:center;flex:1}
+.s1-trust-val{font-family:var(--font);font-size:22px;color:var(--primary);font-weight:700}
+.s1-trust-label{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-light);font-weight:600;margin-top:2px}
+
+.s1-powered{text-align:center;padding:0 24px 24px;font-size:10px;color:var(--text-light);letter-spacing:.04em}
+.s1-powered strong{color:var(--primary-light);font-weight:600}
+
+/* ===== SCREEN 1B: CUSTOMER INFO ===== */
+.s1b{background:var(--primary-dark);min-height:100%;display:flex;flex-direction:column;padding:0}
+.s1b-top{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.s1b-back{background:none;border:none;color:rgba(246,243,238,.5);font-size:13px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:4px}
+.s1b-hero{text-align:center;padding:24px 24px 16px}
+.s1b-title{font-family:var(--font);font-size:24px;font-weight:700;color:var(--secondary);line-height:1.2}
+.s1b-sub{font-size:13px;color:rgba(246,243,238,.45);margin-top:6px}
+.s1b-form{padding:0 24px;display:flex;flex-direction:column;gap:14px}
+@media(max-width:767px){
+  .s1b-hero{padding:16px 24px 10px}
+  .s1b-form{gap:12px}
+  .s1b-input{padding:12px 14px}
+  .s1b-prefix{padding:12px 10px}
+  .s1b-footer{padding:14px 24px 24px}
+}
+.s1b-field{display:flex;flex-direction:column;gap:4px}
+.s1b-label{font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.08em}
+.s1b-input{padding:14px 16px;border-radius:var(--rs);border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--secondary);font-family:var(--font);font-size:15px;outline:none;transition:border-color .2s}
+.s1b-input:focus{border-color:var(--accent)}
+.s1b-input::placeholder{color:rgba(246,243,238,.3)}
+.s1b-phone-wrap{display:flex;gap:8px}
+.s1b-prefix{padding:14px 12px;border-radius:var(--rs);border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:var(--secondary);font-family:var(--font);font-size:15px;width:64px;text-align:center;flex-shrink:0}
+.s1b-phone-wrap .s1b-input{flex:1}
+.s1b-consent{display:flex;gap:10px;align-items:flex-start;padding:4px 0}
+.s1b-checkbox{width:18px;height:18px;border-radius:4px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);cursor:pointer;flex-shrink:0;margin-top:2px;appearance:none;-webkit-appearance:none;position:relative}
+.s1b-checkbox:checked{background:var(--accent);border-color:var(--accent)}
+.s1b-checkbox:checked::after{content:'';position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid var(--white);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.s1b-consent-text{font-size:11px;color:rgba(246,243,238,.4);line-height:1.5}
+.s1b-footer{padding:20px 24px 32px}
+.s1b-error{font-size:11px;color:var(--coral);text-align:center;margin-bottom:8px;min-height:16px}
+.s1b-btn{display:block;width:100%;padding:18px;background:var(--accent);color:var(--white);border:none;border-radius:var(--rp);text-align:center;font-family:var(--font);font-size:16px;font-weight:700;letter-spacing:.03em;cursor:pointer;transition:all .2s}
+.s1b-btn:hover{background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 6px 20px rgba(209,142,108,.3)}
+.s1b-btn:active{transform:scale(.98)}
+
+/* ===== SCREEN 2: INSTRUCTIONS ===== */
+.s2-inst{background:var(--primary-dark);min-height:100%;display:flex;flex-direction:column;padding:0}
+.s2-inst-top{padding:24px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.s2-inst-back{background:none;border:none;color:rgba(246,243,238,.5);font-size:13px;font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:4px}
+.s2-inst-skip{font-size:12px;color:rgba(246,243,238,.4);cursor:pointer}
+.s2-inst-hero{text-align:center;padding:28px 24px 24px}
+.s2-inst-title{font-family:var(--font);font-size:24px;font-weight:700;color:var(--secondary);line-height:1.2}
+.s2-inst-sub{font-size:13px;color:rgba(246,243,238,.45);margin-top:6px}
+.s2-inst-cards{padding:0 20px;display:flex;flex-direction:column;gap:12px;flex:1}
+.s2-inst-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:18px 20px;display:flex;gap:16px;align-items:flex-start}
+.s2-inst-icon{width:48px;height:48px;border-radius:14px;background:rgba(209,142,108,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.s2-inst-icon svg{width:24px;height:24px;stroke:var(--accent);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.s2-inst-card-text{flex:1}
+.s2-inst-card-title{font-size:15px;font-weight:700;color:var(--secondary);margin-bottom:3px}
+.s2-inst-card-desc{font-size:12px;color:rgba(246,243,238,.5);line-height:1.5}
+.s2-inst-footer{padding:20px 20px 32px;margin-top:auto}
+.s2-inst-consent{font-size:11px;color:rgba(246,243,238,.4);text-align:center;line-height:1.5;margin-bottom:14px;padding:0 8px}
+
+/* ===== SCREEN 2B: CAPTURE + ANALYSIS ===== */
+.s2b-cap{background:#111;min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;color:var(--secondary)}
+.s2b-cap-title{font-family:var(--font);font-size:20px;font-weight:700;color:var(--accent);margin-bottom:8px}
+.s2b-cap-sub{font-size:13px;color:rgba(246,243,238,.4);margin-bottom:24px}
+
+.s2b-upload-zone{width:220px;height:220px;border:2px dashed var(--accent);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:24px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.s2b-upload-zone:hover{border-color:var(--accent-light);background:rgba(209,142,108,.05)}
+.s2b-upload-zone svg{width:40px;height:40px;stroke:var(--accent);fill:none;stroke-width:1.5;margin-bottom:8px}
+.s2b-upload-text{font-size:13px;color:rgba(246,243,238,.5);line-height:1.5}
+.s2b-upload-text strong{color:var(--accent);font-weight:600}
+
+.s2b-preview-img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:none}
+.s2b-upload-zone.has-image .s2b-preview-img{display:block}
+.s2b-upload-zone.has-image svg,.s2b-upload-zone.has-image .s2b-upload-text{display:none}
+
+.s2b-actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px}
+.s2b-retake{font-size:12px;color:rgba(246,243,238,.4);cursor:pointer;text-decoration:underline;display:none}
+
+/* Analyzing state */
+.s2b-analyzing{display:none;flex-direction:column;align-items:center;gap:16px}
+.s2b-analyzing.show{display:flex}
+.s2b-capture-ui.hide{display:none}
+
+.s2b-scan-wrap{width:200px;height:200px;border-radius:50%;overflow:hidden;position:relative}
+.s2b-scan-img{width:100%;height:100%;object-fit:cover}
+.s2b-scan-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(180deg,transparent 0%,rgba(209,142,108,.3) 50%,transparent 100%);animation:scanMove 2s ease-in-out infinite}
+@keyframes scanMove{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+.s2b-analyze-text{font-size:16px;font-weight:600;color:var(--accent)}
+.s2b-analyze-dots{display:inline-block;width:20px;text-align:left}
+.s2b-analyze-sub{font-size:12px;color:rgba(246,243,238,.4)}
+
+/* ===== SCREEN 3: AI REPORT ===== */
+.s3-report{background:var(--bg);padding-bottom:40px;min-height:100%}
+.s3-hdr{background:linear-gradient(145deg,var(--primary),var(--primary-dark));padding:40px 24px 24px;border-radius:0 0 var(--r) var(--r);text-align:center;position:relative;overflow:hidden}
+.s3-hdr::before{content:'';position:absolute;top:-20px;right:-20px;width:120px;height:120px;background:radial-gradient(circle,rgba(209,142,108,.15),transparent);border-radius:50%}
+.s3-htitle{font-family:var(--font);font-size:28px;font-weight:700;color:var(--secondary);line-height:1.1;position:relative;z-index:1}
+.s3-hsub{font-size:12px;color:rgba(246,243,238,.5);margin-top:6px;position:relative;z-index:1}
+
+.s3-ov{margin:-14px 16px 16px;background:var(--white);border-radius:var(--r);padding:24px 20px;box-shadow:0 4px 24px rgba(58,58,58,.08);text-align:center;position:relative;z-index:2}
+.score-ring{width:130px;height:130px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;position:relative}
+.score-ring svg{position:absolute;top:0;left:0;width:100%;height:100%;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:6;stroke-linecap:round}
+.score-ring .ring-bg{stroke:var(--secondary)}
+.score-ring .ring-fill{stroke:var(--accent);transition:stroke-dashoffset 1.5s ease}
+.score-num{font-family:var(--font);font-size:36px;font-weight:700;color:var(--primary);line-height:1;position:relative;z-index:1}
+.score-label{font-size:10px;color:var(--accent);font-weight:600;text-transform:uppercase;letter-spacing:.05em;position:relative;z-index:1}
+
+.s3-badges{display:flex;gap:8px;justify-content:center;margin:14px 0;flex-wrap:wrap}
+.s3-badge{padding:6px 14px;border-radius:var(--rp);border:1px solid var(--secondary-dark);background:var(--white);font-size:12px;font-weight:600;color:var(--primary)}
+.s3-badge span{font-weight:400;color:var(--text-light);font-size:10px;display:block}
+.s3-summary{font-size:13px;color:var(--text-mid);line-height:1.6;margin-top:8px}
+.s3-summary strong{color:var(--primary)}
+
+.stitle{font-family:var(--font);font-size:18px;font-weight:700;color:var(--primary);padding:0 16px;margin:20px 0 12px}
+
+/* Hair photo card */
+.hairmap{margin:0 16px 16px;background:var(--white);border-radius:var(--r);padding:18px 14px 14px;box-shadow:0 2px 12px rgba(0,0,0,.04)}
+.hm-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--primary);text-align:center;margin-bottom:12px}
+.hm-wrap{position:relative;width:100%;aspect-ratio:4/3;border-radius:var(--rs);overflow:hidden;background:var(--secondary)}
+.hm-img{width:100%;height:100%;object-fit:cover}
+
+/* Concern cards */
+.cc{margin:0 16px 10px;background:var(--white);border-radius:var(--r);padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.cc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cc-name{font-weight:700;font-size:15px;color:var(--text)}
+.sev{font-size:10px;font-weight:700;text-transform:uppercase;padding:4px 10px;border-radius:var(--rp);letter-spacing:.03em}
+.sev.att{background:var(--coral-bg);color:var(--coral)}
+.sev.avg{background:var(--amber-bg);color:var(--amber)}
+.sev.good{background:var(--green-bg);color:var(--green)}
+.cc-bar{height:5px;background:var(--secondary);border-radius:3px;margin:4px 0;overflow:hidden}
+.cc-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.cc-fill.low{background:linear-gradient(90deg,var(--coral),var(--amber))}
+.cc-fill.mid{background:linear-gradient(90deg,var(--amber),var(--accent))}
+.cc-fill.hi{background:linear-gradient(90deg,var(--accent),var(--green))}
+.cc-score{font-size:11px;font-weight:600;color:var(--text-light)}
+.cc-insight{font-size:12px;color:var(--text-mid);line-height:1.6;margin-top:6px}
+
+/* Hair Loss Deep Dive */
+.hairdive{margin:0 16px 16px;background:linear-gradient(145deg,var(--primary),var(--primary-dark));border-radius:var(--r);padding:20px 18px;color:var(--secondary)}
+.hairdive-header{text-align:center;margin-bottom:18px}
+.hairdive-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);font-weight:600}
+.hairdive-title{font-family:var(--font);font-size:22px;font-weight:700;color:var(--secondary);margin-top:4px}
+.hd-card{background:rgba(255,255,255,.08);border-radius:var(--rs);padding:16px;margin-bottom:12px}
+.hd-card-title{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);font-weight:600;margin-bottom:10px}
+.hd-type-badge{display:inline-block;padding:6px 16px;background:var(--accent);color:var(--white);border-radius:var(--rp);font-weight:700;font-size:14px;margin-bottom:10px}
+.hd-zone-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.hd-zone-item:last-child{border-bottom:none}
+.hd-zone-name{font-size:13px;font-weight:500;color:var(--secondary)}
+.hd-zone-bar-wrap{width:120px;display:flex;align-items:center;gap:8px}
+.hd-zone-bar{flex:1;height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden}
+.hd-zone-fill{height:100%;border-radius:2px;background:var(--accent)}
+.hd-zone-pct{font-size:11px;font-weight:600;color:var(--accent);width:32px;text-align:right}
+.hd-tl-item{display:flex;gap:12px;margin-bottom:10px}
+.hd-tl-item:last-child{margin-bottom:0}
+.hd-tl-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:5px;flex-shrink:0}
+.hd-tl-text{font-size:12px;color:rgba(246,243,238,.7);line-height:1.5}
+.hd-tl-text strong{color:var(--secondary)}
+
+/* ===== SCREEN 4: QUESTIONNAIRE ===== */
+.s4-quiz{padding:24px;padding-top:20px;background:var(--white);min-height:100%}
+.s4-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.s4-back{font-size:13px;color:var(--text-mid);cursor:pointer;display:flex;align-items:center;gap:4px;background:none;border:none;font-family:var(--font)}
+.s4-step{font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.s4-progress{display:flex;gap:3px;margin-bottom:24px}
+.s4-bar{flex:1;height:3px;border-radius:2px;background:var(--secondary);transition:background .3s}
+.s4-bar.done{background:var(--primary)}
+.s4-bar.active{background:var(--accent)}
+.s4-section{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:600;margin-bottom:6px}
+.s4-question{font-family:var(--font);font-size:22px;font-weight:700;line-height:1.25;color:var(--primary);margin-bottom:6px}
+@media(max-width:374px){.s4-question{font-size:20px}}
+.s4-reason{font-size:12px;color:var(--text-light);margin-bottom:18px;font-style:italic}
+.s4-opt{display:block;width:100%;padding:14px 18px;margin-bottom:8px;border-radius:var(--rs);border:1.5px solid var(--secondary-dark);background:var(--white);font-size:14px;font-weight:500;text-align:left;cursor:pointer;transition:all .2s;font-family:var(--font);color:var(--text)}
+.s4-opt:hover{border-color:var(--primary-light);background:var(--secondary)}
+.s4-opt:active,.s4-opt.sel{background:var(--primary);color:var(--white);border-color:var(--primary);transform:scale(.98)}
+.s4-opt.multi-sel{background:var(--primary);color:var(--white);border-color:var(--primary)}
+.s4-multi-hint{font-size:11px;color:var(--text-light);margin-bottom:12px}
+.s4-next-btn{margin-top:12px}
+
+/* ===== SCREEN 5: DIAGNOSIS ===== */
+.s5-diag{background:var(--bg);padding-bottom:40px;min-height:100%}
+.s5-diag-hdr{background:linear-gradient(145deg,var(--primary),var(--primary-dark));padding:36px 24px 20px;border-radius:0 0 var(--r) var(--r);text-align:center}
+.s5-diag-title{font-family:var(--font);font-size:24px;font-weight:700;color:var(--secondary);line-height:1.15}
+.s5-diag-sub{font-size:12px;color:rgba(246,243,238,.5);margin-top:4px}
+
+.diag-card{margin:-10px 16px 16px;background:var(--white);border-radius:var(--r);padding:20px;box-shadow:0 4px 24px rgba(58,58,58,.08);position:relative;z-index:2}
+.diag-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--secondary)}
+.diag-row:last-child{border-bottom:none}
+.diag-label{font-size:13px;color:var(--text-mid)}
+.diag-val{font-weight:700;font-size:14px;color:var(--primary)}
+
+.tip{margin:0 16px 10px;background:var(--white);border-radius:var(--r);padding:14px 16px;border-left:3px solid var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.tip-t{font-size:12px;color:var(--text-mid);line-height:1.6}
+.tip-t strong{color:var(--primary)}
+
+/* Expert CTA */
+.expert-cta{margin:0 16px 16px;background:linear-gradient(145deg,var(--accent),var(--accent-dark));border-radius:var(--r);padding:24px 20px;text-align:center}
+.expert-cta-title{font-size:18px;font-weight:700;color:var(--white);margin-bottom:6px}
+.expert-cta-sub{font-size:12px;color:rgba(255,255,255,.7);margin-bottom:16px;line-height:1.5}
+.expert-cta-btn{display:block;width:100%;padding:16px;background:var(--white);color:var(--accent-dark);border:none;border-radius:var(--rp);font-family:var(--font);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.expert-cta-btn:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.15)}
+
+/* Callback confirmation */
+.callback-confirm{display:none;margin:0 16px 16px;background:var(--green-bg);border-radius:var(--r);padding:24px 20px;text-align:center}
+.callback-confirm.show{display:block}
+.callback-check{width:48px;height:48px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;animation:popIn .4s cubic-bezier(.2,.6,.35,1)}
+@keyframes popIn{0%{transform:scale(0)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+.callback-check svg{width:24px;height:24px;stroke:var(--white);fill:none;stroke-width:2.5}
+.callback-title{font-size:16px;font-weight:700;color:var(--green);margin-bottom:4px}
+.callback-text{font-size:13px;color:var(--text-mid);line-height:1.5}
+
+.share{text-align:center;padding:20px 16px 8px}
+.share-title{font-family:var(--font);font-size:16px;font-weight:700;color:var(--primary)}
+.share-sub{font-size:12px;color:var(--text-light);margin-top:2px}
+.share-btns{display:flex;gap:10px;justify-content:center;margin-top:12px}
+.share-btn{width:40px;height:40px;border-radius:50%;border:1.5px solid var(--secondary-dark);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--white);font-size:14px;transition:all .2s}
+.share-btn:hover{border-color:var(--primary);background:var(--secondary)}
+.retake{margin-top:14px;font-size:12px;color:var(--primary);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+
+.divider{height:1px;background:var(--secondary-dark);margin:8px 16px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="screens">
+
+    <!-- ===== SCREEN 1: LANDING ===== -->
+    <div class="screen active" id="s1">
+      <div class="s1">
+        <div class="s1-nav">
+          <div class="s1-logo">Hair Originals</div>
+          <div class="s1-nav-links"><span>Shop</span><span>About</span></div>
+        </div>
+
+        <div class="s1-hero">
+          <div class="s1-eyebrow">AI Hair Health Analyzer</div>
+          <div class="s1-title">Discover What Your <em>Hair</em> Really Needs</div>
+          <div class="s1-sub">Our AI analyzes your hair, detects concerns like thinning, damage & scalp issues, and connects you with an expert.</div>
+          <div class="s1-time"><div class="s1-time-dot"></div> Just 90 Seconds</div>
+        </div>
+
+        <div class="s1-cta">
+          <div class="btn btn-accent" onclick="goTo('s1b')">Start My Free Hair Analysis</div>
+          <div class="s1-cta-sub">100% Private &bull; Expert-Backed &bull; Free</div>
+        </div>
+
+        <div class="s1-detect">
+          <div class="s1-detect-label">What We Analyze</div>
+          <div class="s1-detect-tags">
+            <div class="s1-detect-tag">Thinning</div>
+            <div class="s1-detect-tag">Damage</div>
+            <div class="s1-detect-tag">Scalp Health</div>
+            <div class="s1-detect-tag">Texture</div>
+            <div class="s1-detect-tag">Hair Density</div>
+            <div class="s1-detect-tag">Split Ends</div>
+            <div class="s1-detect-tag">Frizz</div>
+          </div>
+        </div>
+
+        <div class="s1-how">
+          <div class="s1-how-title">How It Works</div>
+          <div class="s1-steps">
+            <div class="s1-step">
+              <div class="s1-step-num">1</div>
+              <div class="s1-step-text">Share your details <span>Quick info so we can send you the report</span></div>
+            </div>
+            <div class="s1-step">
+              <div class="s1-step-num">2</div>
+              <div class="s1-step-text">Take a photo of your hair <span>Our AI analyzes 10+ hair parameters in seconds</span></div>
+            </div>
+            <div class="s1-step">
+              <div class="s1-step-num">3</div>
+              <div class="s1-step-text">Get your detailed report <span>See scores for thinning, damage, scalp & more</span></div>
+            </div>
+            <div class="s1-step">
+              <div class="s1-step-num">4</div>
+              <div class="s1-step-text">Talk to a hair expert <span>Get personalized advice from a specialist</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s1-promise">
+          <div class="s1-promise-grid">
+            <div class="s1-promise-item">
+              <div class="s1-promise-icon">&#x1F9EC;</div>
+              <div class="s1-promise-label">Made for Indian Hair</div>
+              <div class="s1-promise-sub">Trained on diverse hair types</div>
+            </div>
+            <div class="s1-promise-item">
+              <div class="s1-promise-icon">&#x1F512;</div>
+              <div class="s1-promise-label">100% Private</div>
+              <div class="s1-promise-sub">Your photo is never stored</div>
+            </div>
+            <div class="s1-promise-item">
+              <div class="s1-promise-icon">&#x26A1;</div>
+              <div class="s1-promise-label">Results in 90 Seconds</div>
+              <div class="s1-promise-sub">Instant AI-powered analysis</div>
+            </div>
+            <div class="s1-promise-item">
+              <div class="s1-promise-icon">&#x2705;</div>
+              <div class="s1-promise-label">Expert-Backed</div>
+              <div class="s1-promise-sub">Built with hair science</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s1-trust">
+          <div class="s1-trust-item"><div class="s1-trust-val">10+</div><div class="s1-trust-label">Parameters<br>Analyzed</div></div>
+          <div class="s1-trust-item"><div class="s1-trust-val">5K+</div><div class="s1-trust-label">Scans<br>Completed</div></div>
+          <div class="s1-trust-item"><div class="s1-trust-val">95%</div><div class="s1-trust-label">Accuracy<br>Rate</div></div>
+        </div>
+
+        <div class="s1-powered">Powered by <strong>GlamAR</strong> AI Hair Technology</div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN 1B: CUSTOMER INFO ===== -->
+    <div class="screen" id="s1b">
+      <div class="s1b">
+        <div class="s1b-top">
+          <button class="s1b-back" onclick="goTo('s1')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+          </button>
+        </div>
+
+        <div class="s1b-hero">
+          <div class="s1b-title">Let's Get to<br>Know You</div>
+          <div class="s1b-sub">So we can send you your personalized report</div>
+        </div>
+
+        <div class="s1b-form">
+          <div class="s1b-field">
+            <label class="s1b-label">Your Name</label>
+            <input class="s1b-input" type="text" id="inp-name" placeholder="e.g. Priya Sharma" autocomplete="name">
+          </div>
+
+          <div class="s1b-field">
+            <label class="s1b-label">Phone Number</label>
+            <div class="s1b-phone-wrap">
+              <div class="s1b-prefix">+91</div>
+              <input class="s1b-input" type="tel" id="inp-phone" placeholder="98765 43210" maxlength="10" autocomplete="tel">
+            </div>
+          </div>
+
+          <div class="s1b-field">
+            <label class="s1b-label">Email</label>
+            <input class="s1b-input" type="email" id="inp-email" placeholder="priya@example.com" autocomplete="email">
+          </div>
+
+          <div class="s1b-consent">
+            <input type="checkbox" class="s1b-checkbox" id="inp-consent">
+            <label class="s1b-consent-text" for="inp-consent">I agree to receive my hair analysis report and follow-up communication from Hair Originals.</label>
+          </div>
+        </div>
+
+        <div class="s1b-footer">
+          <div class="s1b-error" id="form-error"></div>
+          <button class="s1b-btn" onclick="submitCustomerInfo()">Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN 2: INSTRUCTIONS ===== -->
+    <div class="screen" id="s2">
+      <div class="s2-inst">
+        <div class="s2-inst-top">
+          <button class="s2-inst-back" onclick="goTo('s1b')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Back
+          </button>
+          <div class="s2-inst-skip" onclick="goTo('s2b')">Skip</div>
+        </div>
+
+        <div class="s2-inst-hero">
+          <div class="s2-inst-title">How to Photograph<br>Your Hair for Best Results</div>
+          <div class="s2-inst-sub">Follow these tips for accurate analysis</div>
+        </div>
+
+        <div class="s2-inst-cards">
+          <div class="s2-inst-card">
+            <div class="s2-inst-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M20 4h-3.17L15 2H9L7.17 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/></svg>
+            </div>
+            <div class="s2-inst-card-text">
+              <div class="s2-inst-card-title">Show your concern area</div>
+              <div class="s2-inst-card-desc">Take a photo of the area that concerns you most — thinning crown, hairline, damage, or scalp.</div>
+            </div>
+          </div>
+
+          <div class="s2-inst-card">
+            <div class="s2-inst-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            </div>
+            <div class="s2-inst-card-text">
+              <div class="s2-inst-card-title">Find good lighting</div>
+              <div class="s2-inst-card-desc">Use natural light or a well-lit space. Avoid harsh shadows or backlight on your hair.</div>
+            </div>
+          </div>
+
+          <div class="s2-inst-card">
+            <div class="s2-inst-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="s2-inst-card-text">
+              <div class="s2-inst-card-title">Hold steady</div>
+              <div class="s2-inst-card-desc">Keep the camera 6–8 inches away. Make sure your hair is clearly visible and in focus.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s2-inst-footer">
+          <div class="s2-inst-consent">By clicking "Proceed" below, I consent to my image being analyzed by AI for hair health assessment.</div>
+          <button class="s1b-btn" onclick="goTo('s2b')">Proceed to Camera</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN 2B: CAPTURE + ANALYSIS ===== -->
+    <div class="screen" id="s2b">
+      <div class="s2b-cap">
+        <div class="s2b-capture-ui">
+          <div class="s2b-cap-title">Upload Your Hair Photo</div>
+          <div class="s2b-cap-sub">Take a photo or upload from your gallery</div>
+
+          <div class="s2b-upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <div class="s2b-upload-text"><strong>Tap to upload</strong><br>or take a photo</div>
+            <img class="s2b-preview-img" id="preview-img" alt="Preview">
+          </div>
+          <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="handleFileSelect(event)">
+
+          <div class="s2b-actions">
+            <div class="s2b-retake" id="retake-btn" onclick="resetUpload()">Retake photo</div>
+            <button class="btn btn-accent" id="analyze-btn" style="display:none" onclick="startAnalysis()">Analyze My Hair</button>
+          </div>
+        </div>
+
+        <div class="s2b-analyzing" id="analyzing-state">
+          <div class="s2b-scan-wrap">
+            <img class="s2b-scan-img" id="scan-img" alt="Analyzing">
+            <div class="s2b-scan-overlay"></div>
+          </div>
+          <div class="s2b-analyze-text">Analyzing your hair<span class="s2b-analyze-dots" id="dots"></span></div>
+          <div class="s2b-analyze-sub">Our AI is examining 10+ hair parameters</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SCREEN 3: AI HAIR REPORT ===== -->
+    <div class="screen" id="s3">
+      <div class="s3-report" id="report-container"></div>
+    </div>
+
+    <!-- ===== SCREEN 4: QUESTIONNAIRE ===== -->
+    <div class="screen" id="s4">
+      <div class="s4-quiz" id="quiz-container"></div>
+    </div>
+
+    <!-- ===== SCREEN 5: DIAGNOSIS + CTA ===== -->
+    <div class="screen" id="s5">
+      <div class="s5-diag" id="diagnosis-container"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ===== CONFIGURATION =====
+// Replace with client's actual endpoint when ready
+const CONFIG = {
+  API_ENDPOINT: null, // e.g. 'https://api.hairoriginals.com/hair-analysis-lead'
+  GEMINI_PROXY: null, // e.g. 'https://hair-analysis.workers.dev/analyze'
+  DEMO_MODE: true     // When true, uses mock data and logs to console
+};
+
+/*
+  DATA PAYLOAD CONTRACT — Client implements POST endpoint accepting:
+  {
+    "name": "string",
+    "phone": "string (+91XXXXXXXXXX)",
+    "email": "string",
+    "timestamp": "ISO 8601",
+    "photo_base64": "string (compressed JPEG)",
+    "analysis": { Gemini response JSON },
+    "quiz_answers": { question: answer pairs },
+    "diagnosis": { derived diagnosis object },
+    "hair_health_score": number,
+    "expert_callback_requested": boolean
+  }
+*/
+
+// ===== CUSTOMER DATA =====
+const customerData = { name: '', phone: '', email: '' };
+let capturedImageBase64 = null;
+
+// ===== MOCK DATA =====
+const mockApiResponse = {
+  overall_score: 64,
+  hair_type: "Wavy",
+  hair_density: "Medium",
+  porosity: "High",
+  summary: "Your hair shows signs of moderate thinning at the crown and visible dryness along the lengths. The scalp appears slightly flaky, which may be contributing to hair fall. With the right care routine and expert guidance, significant improvement is achievable.",
+  concerns: [
+    { name: "Hair Thinning", score: 42, severity: "Needs Attention",
+      description: "Noticeable thinning at the crown and temples. Scalp is visible through hair in certain areas, suggesting progressive miniaturization of follicles." },
+    { name: "Dryness & Damage", score: 48, severity: "Needs Attention",
+      description: "Hair appears dehydrated with rough texture along the mid-lengths and ends. This is often caused by heat styling, chemical treatments, or environmental stress." },
+    { name: "Scalp Health", score: 55, severity: "Average",
+      description: "Mild flaking and some redness detected. A healthy scalp is the foundation for strong hair growth — this needs attention." },
+    { name: "Frizz & Texture", score: 62, severity: "Average",
+      description: "Moderate frizz along the hairline and flyaways. Your wavy texture is prone to frizz, especially in humid conditions." },
+    { name: "Split Ends", score: 70, severity: "Average",
+      description: "Some splitting visible at the ends. Regular trims every 6-8 weeks and protective serums can help prevent further damage." },
+    { name: "Hair Density", score: 78, severity: "Good",
+      description: "Overall density is still reasonable. Early intervention can help preserve and improve your current density." }
+  ],
+  hair_loss_analysis: {
+    detected: true,
+    pattern: "Diffuse",
+    stage: "Early-stage diffuse thinning",
+    affected_zones: [
+      { name: "Crown", involvement: 55 },
+      { name: "Temples", involvement: 35 },
+      { name: "Hairline", involvement: 20 },
+      { name: "Sides", involvement: 10 }
+    ],
+    timeline: {
+      early_improvement: "6–8 weeks",
+      full_response: "4–6 months with consistent care"
+    }
+  }
+};
+
+// ===== QUESTIONNAIRE DATA =====
+const quizData = [
+  { section: "Hair Loss",
+    q: "When did you first notice hair thinning or fall?",
+    reason: "Duration helps determine the underlying cause.",
+    opts: ["Less than 3 months ago", "3–6 months ago", "6–12 months ago", "More than 1 year ago"] },
+  { section: "Hair Loss",
+    q: "How much hair do you lose daily (approximately)?",
+    reason: "Helps gauge the severity of hair fall.",
+    opts: ["Normal (50–100 strands)", "More than usual", "Clumps or patches", "Not sure"] },
+  { section: "Lifestyle",
+    q: "How would you describe your stress levels?",
+    reason: "Stress is a major trigger for hair fall.",
+    opts: ["Low", "Moderate", "High"] },
+  { section: "Lifestyle",
+    q: "How much water do you drink daily?",
+    reason: "Hydration impacts hair health and growth.",
+    opts: ["Less than 1L", "1–2L", "More than 2L"] },
+  { section: "Diet",
+    q: "Do you follow any specific diet?",
+    reason: "Nutrition directly affects hair strength.",
+    opts: ["Vegetarian", "Non-vegetarian", "Vegan", "No specific diet"] },
+  { section: "Hair Care",
+    q: "How often do you wash your hair?",
+    reason: "Washing frequency affects scalp health.",
+    opts: ["Daily", "Every 2–3 days", "Once a week", "Less than once a week"] },
+  { section: "Hair Care",
+    q: "Which of these do you use regularly?",
+    reason: "Understanding your current routine helps us advise better.",
+    opts: ["Shampoo", "Conditioner", "Hair oil", "Hair serum", "Heat tools", "Hair color/dye"],
+    multi: true },
+  { section: "Chemical & Heat",
+    q: "Do you chemically treat your hair?",
+    reason: "Chemical treatments can weaken hair over time.",
+    opts: ["Yes, regularly (color/keratin/rebonding)", "Occasionally", "Never"] },
+  { section: "Medical",
+    q: "Have you been diagnosed with any of these?",
+    reason: "Medical conditions often contribute to hair loss.",
+    opts: ["Thyroid issues", "PCOS", "Anemia / Iron deficiency", "Alopecia", "None of these"],
+    multi: true },
+  { section: "Previous Treatment",
+    q: "Have you consulted a hair expert before?",
+    reason: "Helps us understand where you are in your hair journey.",
+    opts: ["Yes — Dermatologist", "Yes — Trichologist", "Yes — Salon expert", "No, this is my first time"] }
+];
+
+let currentQ = 0;
+const quizAnswers = [];
+const multiSelections = new Set();
+
+// ===== SCREEN NAVIGATION =====
+let currentScreen = 's1';
+
+function goTo(id) {
+  if (id === currentScreen) return;
+  const cur = document.getElementById(currentScreen);
+  const next = document.getElementById(id);
+  cur.classList.remove('active');
+  cur.classList.add('exit-left');
+  next.classList.add('active');
+  next.scrollTop = 0;
+  setTimeout(() => cur.classList.remove('exit-left'), 500);
+  currentScreen = id;
+
+  if (id === 's3' && !document.getElementById('report-container').innerHTML) {
+    renderReport(mockApiResponse);
+  }
+  if (id === 's4') { currentQ = 0; renderQuiz(); }
+}
+
+// ===== CUSTOMER FORM VALIDATION =====
+function submitCustomerInfo() {
+  const name = document.getElementById('inp-name').value.trim();
+  const phone = document.getElementById('inp-phone').value.trim().replace(/\s/g, '');
+  const email = document.getElementById('inp-email').value.trim();
+  const consent = document.getElementById('inp-consent').checked;
+  const errEl = document.getElementById('form-error');
+
+  if (!name) { errEl.textContent = 'Please enter your name'; return; }
+  if (!/^\d{10}$/.test(phone)) { errEl.textContent = 'Please enter a valid 10-digit phone number'; return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Please enter a valid email address'; return; }
+  if (!consent) { errEl.textContent = 'Please agree to the consent to continue'; return; }
+
+  errEl.textContent = '';
+  customerData.name = name;
+  customerData.phone = '+91' + phone;
+  customerData.email = email;
+
+  // Send partial lead data
+  sendData({ name: customerData.name, phone: customerData.phone, email: customerData.email, timestamp: new Date().toISOString() });
+
+  goTo('s2');
+}
+
+// ===== FILE UPLOAD & CAPTURE =====
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    capturedImageBase64 = ev.target.result;
+    const zone = document.getElementById('upload-zone');
+    const preview = document.getElementById('preview-img');
+    preview.src = capturedImageBase64;
+    zone.classList.add('has-image');
+    document.getElementById('retake-btn').style.display = 'block';
+    document.getElementById('analyze-btn').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetUpload() {
+  capturedImageBase64 = null;
+  const zone = document.getElementById('upload-zone');
+  zone.classList.remove('has-image');
+  document.getElementById('preview-img').src = '';
+  document.getElementById('retake-btn').style.display = 'none';
+  document.getElementById('analyze-btn').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+function startAnalysis() {
+  // Show analyzing state
+  document.querySelector('.s2b-capture-ui').classList.add('hide');
+  const analyzing = document.getElementById('analyzing-state');
+  analyzing.classList.add('show');
+  document.getElementById('scan-img').src = capturedImageBase64;
+
+  // Animate dots
+  let dotCount = 0;
+  const dotInterval = setInterval(() => {
+    dotCount = (dotCount + 1) % 4;
+    document.getElementById('dots').textContent = '.'.repeat(dotCount);
+  }, 400);
+
+  if (CONFIG.DEMO_MODE) {
+    // Simulate API delay then show report with mock data
+    setTimeout(() => {
+      clearInterval(dotInterval);
+      goTo('s3');
+      // Reset capture UI for potential retake
+      setTimeout(() => {
+        document.querySelector('.s2b-capture-ui').classList.remove('hide');
+        analyzing.classList.remove('show');
+      }, 600);
+    }, 3000);
+  } else {
+    // TODO: Phase 2 — call CONFIG.GEMINI_PROXY with capturedImageBase64
+    // fetch(CONFIG.GEMINI_PROXY, { method: 'POST', body: JSON.stringify({ image: capturedImageBase64 }) })
+    //   .then(r => r.json())
+    //   .then(data => { clearInterval(dotInterval); renderReport(data); goTo('s3'); })
+    //   .catch(err => { clearInterval(dotInterval); alert('Analysis failed. Please try again.'); });
+  }
+}
+
+// ===== REPORT RENDERER (Screen 3) =====
+function renderReport(data) {
+  const score = data.overall_score;
+  const circumference = 2 * Math.PI * 58;
+  const offset = circumference - (score / 100) * circumference;
+  const sortedConcerns = [...data.concerns].sort((a, b) => a.score - b.score);
+
+  function sevClass(sev) { return sev === 'Needs Attention' ? 'att' : sev === 'Good' ? 'good' : 'avg'; }
+  function fillClass(val) { return val < 50 ? 'low' : val < 80 ? 'mid' : 'hi'; }
+  const healthLabel = score >= 80 ? 'Great Hair!' : score >= 60 ? 'Room to Improve' : 'Needs Attention';
+
+  let concernCards = '';
+  sortedConcerns.forEach(c => {
+    concernCards += `
+      <div class="cc">
+        <div class="cc-top"><div class="cc-name">${c.name}</div><div class="sev ${sevClass(c.severity)}">${c.severity}</div></div>
+        <div class="cc-bar"><div class="cc-fill ${fillClass(c.score)}" style="width:${c.score}%"></div></div>
+        <div class="cc-score">${c.score} / 100</div>
+        <div class="cc-insight">${c.description}</div>
+      </div>`;
+  });
+
+  // Hair loss deep dive
+  let hairDive = '';
+  if (data.hair_loss_analysis && data.hair_loss_analysis.detected) {
+    const hl = data.hair_loss_analysis;
+    hairDive = `
+      <div class="stitle">Hair Loss Deep Dive</div>
+      <div class="hairdive">
+        <div class="hairdive-header">
+          <div class="hairdive-label">Advanced Analysis</div>
+          <div class="hairdive-title">Hair Loss Assessment</div>
+        </div>
+
+        <div class="hd-card">
+          <div class="hd-card-title">Pattern & Stage</div>
+          <div class="hd-type-badge">${hl.pattern} Thinning</div>
+          <div style="font-size:12px;color:rgba(246,243,238,.6);margin-top:4px">${hl.stage}</div>
+        </div>
+
+        <div class="hd-card">
+          <div class="hd-card-title">Affected Zones</div>
+          ${hl.affected_zones.map(z => `
+            <div class="hd-zone-item">
+              <div class="hd-zone-name">${z.name}</div>
+              <div class="hd-zone-bar-wrap"><div class="hd-zone-bar"><div class="hd-zone-fill" style="width:${z.involvement}%"></div></div><div class="hd-zone-pct">${z.involvement}%</div></div>
+            </div>`).join('')}
+        </div>
+
+        <div class="hd-card">
+          <div class="hd-card-title">Expected Timeline</div>
+          <div class="hd-tl-item"><div class="hd-tl-dot"></div><div class="hd-tl-text"><strong>Early improvement:</strong> ${hl.timeline.early_improvement} with consistent care</div></div>
+          <div class="hd-tl-item"><div class="hd-tl-dot"></div><div class="hd-tl-text"><strong>Full response:</strong> ${hl.timeline.full_response}</div></div>
+          <div class="hd-tl-item"><div class="hd-tl-dot"></div><div class="hd-tl-text"><strong>Maintenance:</strong> Ongoing scalp care + nutrition to sustain results</div></div>
+        </div>
+      </div>`;
+  }
+
+  // Hair photo display
+  let hairPhoto = '';
+  if (capturedImageBase64) {
+    hairPhoto = `
+      <div class="hairmap">
+        <div class="hm-title">Your Hair Photo</div>
+        <div class="hm-wrap">
+          <img class="hm-img" src="${capturedImageBase64}" alt="Your hair">
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('report-container').innerHTML = `
+    <div class="s3-hdr">
+      <div style="height:16px"></div>
+      <div class="s3-htitle">Your Hair<br>Analysis</div>
+      <div class="s3-hsub">AI-powered results</div>
+    </div>
+
+    <div class="s3-ov">
+      <div class="score-ring">
+        <svg viewBox="0 0 130 130"><circle class="ring-bg" cx="65" cy="65" r="58"/><circle class="ring-fill" cx="65" cy="65" r="58" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}"/></svg>
+        <div style="display:flex;flex-direction:column;align-items:center">
+          <div class="score-num">${score}</div>
+          <div class="score-label">${healthLabel}</div>
+        </div>
+      </div>
+      <div class="s3-badges">
+        <div class="s3-badge"><span>Hair Type</span>${data.hair_type}</div>
+        <div class="s3-badge"><span>Density</span>${data.hair_density}</div>
+        <div class="s3-badge"><span>Porosity</span>${data.porosity}</div>
+      </div>
+      <div class="s3-summary">${data.summary}</div>
+    </div>
+
+    ${hairPhoto}
+
+    <div class="stitle">Detected Concerns</div>
+    <div class="concern-grid">${concernCards}</div>
+
+    <div class="divider"></div>
+
+    ${hairDive}
+
+    <div style="padding:8px 0 16px">
+      <div class="btn" onclick="goTo('s4')">Continue to Personalize</div>
+      <div style="text-align:center;font-size:11px;color:var(--text-light);margin-top:6px">Answer a few questions for your personalized diagnosis</div>
+    </div>
+    <div style="height:20px"></div>
+  `;
+}
+
+// ===== QUIZ RENDERER (Screen 4) =====
+function renderQuiz() {
+  const c = document.getElementById('quiz-container');
+  const d = quizData[currentQ];
+  const total = quizData.length;
+
+  let bars = '<div class="s4-progress">';
+  for (let i = 0; i < total; i++) {
+    bars += `<div class="s4-bar ${i < currentQ ? 'done' : i === currentQ ? 'active' : ''}"></div>`;
+  }
+  bars += '</div>';
+
+  let opts = '';
+  if (d.multi) {
+    opts += '<div class="s4-multi-hint">Select all that apply</div>';
+    d.opts.forEach((o, idx) => {
+      opts += `<div class="s4-opt" onclick="toggleMulti(this, ${idx})">${o}</div>`;
+    });
+    opts += `<div class="btn s4-next-btn" onclick="submitMulti()">Continue</div>`;
+  } else {
+    d.opts.forEach((o, idx) => {
+      opts += `<div class="s4-opt" onclick="selectQuizOpt(this, ${idx})">${o}</div>`;
+    });
+  }
+
+  c.innerHTML = `
+    <div class="s4-top">
+      <button class="s4-back" onclick="${currentQ > 0 ? 'prevQuizQ()' : "goTo('s3')"}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <div class="s4-step">${currentQ + 1} of ${total}</div>
+    </div>
+    ${bars}
+    <div class="s4-section">${d.section}</div>
+    <div class="s4-question">${d.q}</div>
+    <div class="s4-reason">${d.reason}</div>
+    ${opts}
+  `;
+}
+
+function selectQuizOpt(el, idx) {
+  document.querySelectorAll('#quiz-container .s4-opt').forEach(o => o.classList.remove('sel'));
+  el.classList.add('sel');
+  quizAnswers[currentQ] = idx;
+  setTimeout(() => {
+    if (currentQ < quizData.length - 1) { currentQ++; renderQuiz(); }
+    else { renderDiagnosis(); goTo('s5'); }
+  }, 300);
+}
+
+function toggleMulti(el, idx) {
+  if (multiSelections.has(idx)) { multiSelections.delete(idx); el.classList.remove('multi-sel'); }
+  else { multiSelections.add(idx); el.classList.add('multi-sel'); }
+}
+
+function submitMulti() {
+  quizAnswers[currentQ] = [...multiSelections];
+  multiSelections.clear();
+  if (currentQ < quizData.length - 1) { currentQ++; renderQuiz(); }
+  else { renderDiagnosis(); goTo('s5'); }
+}
+
+function prevQuizQ() { if (currentQ > 0) { currentQ--; renderQuiz(); } }
+
+// ===== DIAGNOSIS RENDERER (Screen 5) =====
+function renderDiagnosis() {
+  const data = mockApiResponse;
+  const highStress = quizAnswers[2] >= 2;
+  const lowWater = quizAnswers[3] === 0;
+  const chemTreated = quizAnswers[7] === 0;
+  const hasMedical = Array.isArray(quizAnswers[8]) && quizAnswers[8].length > 0 && !quizAnswers[8].includes(4);
+
+  let primaryConcern = "Hair Thinning";
+  let triggers = [];
+  if (highStress) triggers.push("Stress");
+  if (hasMedical) triggers.push("Medical / Hormonal");
+  if (chemTreated) triggers.push("Chemical Damage");
+  if (lowWater) triggers.push("Dehydration");
+  if (triggers.length === 0) triggers.push("Lifestyle & Environmental");
+
+  if (chemTreated && data.concerns.find(c => c.name === 'Dryness & Damage' && c.score < 50)) {
+    primaryConcern = "Chemical Damage + Thinning";
+  }
+
+  const severity = data.overall_score >= 70 ? 'Mild' : data.overall_score >= 50 ? 'Moderate' : 'Significant';
+
+  // Send complete data
+  sendData({
+    name: customerData.name,
+    phone: customerData.phone,
+    email: customerData.email,
+    timestamp: new Date().toISOString(),
+    photo_base64: capturedImageBase64,
+    analysis: data,
+    quiz_answers: quizAnswers.reduce((acc, a, i) => { acc[quizData[i].q] = Array.isArray(a) ? a.map(idx => quizData[i].opts[idx]) : quizData[i].opts[a]; return acc; }, {}),
+    diagnosis: { primaryConcern, triggers, severity },
+    hair_health_score: data.overall_score,
+    expert_callback_requested: false
+  });
+
+  document.getElementById('diagnosis-container').innerHTML = `
+    <div class="s5-diag-hdr">
+      <div style="height:12px"></div>
+      <div class="s5-diag-title">Your Personalized<br>Hair Diagnosis</div>
+      <div class="s5-diag-sub">Based on your scan + questionnaire</div>
+    </div>
+
+    <div class="diag-card">
+      <div class="diag-row"><div class="diag-label">Primary Concern</div><div class="diag-val">${primaryConcern}</div></div>
+      <div class="diag-row"><div class="diag-label">Likely Triggers</div><div class="diag-val">${triggers.join(' + ')}</div></div>
+      <div class="diag-row"><div class="diag-label">Hair Loss Pattern</div><div class="diag-val">${data.hair_loss_analysis.pattern}</div></div>
+      <div class="diag-row"><div class="diag-label">Severity</div><div class="diag-val">${severity}</div></div>
+      <div class="diag-row"><div class="diag-label">Scalp Condition</div><div class="diag-val">${data.concerns.find(c => c.name === 'Scalp Health')?.severity || 'Average'}</div></div>
+      <div class="diag-row"><div class="diag-label">Expected Timeline</div><div class="diag-val">${data.hair_loss_analysis.timeline.early_improvement}</div></div>
+    </div>
+
+    <div class="stitle">Tips For Your Hair</div>
+    <div class="tip"><div class="tip-t"><strong>Gentle cleansing is key.</strong> Use a sulphate-free shampoo to avoid stripping natural oils. Wash 2-3 times a week for optimal scalp health.</div></div>
+    <div class="tip"><div class="tip-t"><strong>Nutrition matters more than products.</strong> Ensure adequate protein, iron, biotin, and vitamin D intake. Consider a blood test to check for deficiencies.</div></div>
+    <div class="tip"><div class="tip-t"><strong>Minimize heat and chemical stress.</strong> Let your hair air-dry when possible. If you color, extend the gap between sessions and use bond-repair treatments.</div></div>
+
+    <div class="divider"></div>
+
+    <div class="expert-cta" id="expert-cta-box">
+      <div class="expert-cta-title">Talk to a Hair Expert</div>
+      <div class="expert-cta-sub">Get personalized guidance from a hair specialist who will review your report and recommend the best path forward.</div>
+      <button class="expert-cta-btn" onclick="requestCallback()">Request a Callback</button>
+    </div>
+
+    <div class="callback-confirm" id="callback-confirm">
+      <div class="callback-check">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="callback-title">We'll Call You!</div>
+      <div class="callback-text">Our hair expert will reach out to you within 24 hours at <strong>${customerData.phone || '+91 XXXXXXXXXX'}</strong> to discuss your report and next steps.</div>
+    </div>
+
+    <div class="share">
+      <div class="share-title">Share Your Results</div>
+      <div class="share-sub">Help someone with similar concerns</div>
+      <div class="share-btns">
+        <div class="share-btn">&#x1F4E4;</div>
+        <div class="share-btn">&#x1F4CB;</div>
+        <div class="share-btn">&#x1F4AC;</div>
+      </div>
+      <div class="retake" onclick="goTo('s1')">Start Over</div>
+    </div>
+    <div style="height:30px"></div>
+  `;
+}
+
+function requestCallback() {
+  document.getElementById('expert-cta-box').style.display = 'none';
+  document.getElementById('callback-confirm').classList.add('show');
+
+  // Update data with callback request
+  sendData({
+    phone: customerData.phone,
+    email: customerData.email,
+    expert_callback_requested: true,
+    timestamp: new Date().toISOString()
+  });
+}
+
+// ===== DATA HELPER =====
+function sendData(payload) {
+  if (CONFIG.DEMO_MODE) {
+    console.log('[Hair Analysis] Data payload:', payload);
+    return;
+  }
+  if (!CONFIG.API_ENDPOINT) return;
+  fetch(CONFIG.API_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).catch(err => console.error('Failed to send data:', err));
+}
+
+// Init
+renderQuiz();
+</script>
+</body>
+</html>
