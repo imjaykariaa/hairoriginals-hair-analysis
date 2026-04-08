@@ -574,12 +574,85 @@ body{min-height:100%;background:var(--bg);font-family:var(--font);color:var(--te
 </div>
 
 <script>
+// ===== PIXELBIN NANO BANANA 2 — IMAGE GENERATION & EDITING API =====
+const NanoBanana2 = (() => {
+  const API_BASE = "https://api.pixelbin.io/service/platform/transformation/v1.0/predictions/nanoBanana2/generate";
+  const ASPECT_RATIOS = ["1:1","2:3","3:2","3:4","4:3","4:5","5:4","9:16","16:9","21:9","4:1","1:4","1:8","8:1"];
+  const OUTPUT_RESOLUTIONS = ["0.5K","1K","2K","4K"];
+  const STATUS = { SUCCESS: "SUCCESS", FAILURE: "FAILURE", PENDING: "PENDING" };
+  const DEFAULTS = { aspect_ratio: "16:9", output_resolution: "1K", pollInterval: 3000, maxPollAttempts: 60 };
+
+  function authHeader(apiToken) { return `Bearer ${btoa(apiToken)}`; }
+
+  function validateParams({ prompt, images, aspect_ratio, output_resolution }) {
+    if (!prompt || typeof prompt !== "string" || prompt.trim() === "") throw new Error("'prompt' is required.");
+    if (images !== undefined) {
+      const list = Array.isArray(images) ? images : [images];
+      if (list.length > 14) throw new Error("'images' supports max 14 URLs.");
+      list.forEach((url, i) => { if (typeof url !== "string" || url.trim() === "") throw new Error(`'images[${i}]' must be a URL.`); });
+    }
+    if (aspect_ratio && !ASPECT_RATIOS.includes(aspect_ratio)) throw new Error(`Invalid aspect_ratio "${aspect_ratio}".`);
+    if (output_resolution && !OUTPUT_RESOLUTIONS.includes(output_resolution)) throw new Error(`Invalid output_resolution "${output_resolution}".`);
+  }
+
+  async function submitJob(apiToken, { prompt, images, aspect_ratio, output_resolution }) {
+    if (!apiToken) throw new Error("apiToken is required.");
+    validateParams({ prompt, images, aspect_ratio, output_resolution });
+    const formData = new FormData();
+    formData.append("input.prompt", prompt);
+    if (images) {
+      const imageList = Array.isArray(images) ? images : [images];
+      imageList.forEach(url => formData.append("input.images", url));
+    }
+    if (aspect_ratio) formData.append("input.aspect_ratio", aspect_ratio);
+    if (output_resolution) formData.append("input.output_resolution", output_resolution);
+    const response = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Accept": "application/json", "Authorization": authHeader(apiToken) },
+      body: formData,
+    });
+    if (!response.ok) { const err = await response.text(); throw new Error(`Submit failed (${response.status}): ${err}`); }
+    return response.json();
+  }
+
+  async function pollForResult(apiToken, responseUrl) {
+    if (!apiToken) throw new Error("apiToken is required.");
+    if (!responseUrl) throw new Error("responseUrl is required.");
+    const response = await fetch(responseUrl, {
+      method: "GET",
+      headers: { "Accept": "application/json", "Authorization": authHeader(apiToken) },
+    });
+    if (!response.ok) { const err = await response.text(); throw new Error(`Poll failed (${response.status}): ${err}`); }
+    return response.json();
+  }
+
+  async function generate(apiToken, params, options = {}) {
+    const { pollInterval = DEFAULTS.pollInterval, maxPollAttempts = DEFAULTS.maxPollAttempts, onStatusUpdate = null } = options;
+    const submitResponse = await submitJob(apiToken, params);
+    const responseUrl = submitResponse?.urls?.get;
+    if (!responseUrl) throw new Error("No polling URL returned. Response: " + JSON.stringify(submitResponse));
+    if (onStatusUpdate) onStatusUpdate(submitResponse.status, submitResponse);
+    if (submitResponse.status === STATUS.SUCCESS) return submitResponse;
+    if (submitResponse.status === STATUS.FAILURE) throw new Error("Job failed: " + JSON.stringify(submitResponse));
+    for (let attempt = 1; attempt <= maxPollAttempts; attempt++) {
+      await new Promise(r => setTimeout(r, pollInterval));
+      const pollResult = await pollForResult(apiToken, responseUrl);
+      if (onStatusUpdate) onStatusUpdate(pollResult.status, pollResult);
+      if (pollResult.status === STATUS.SUCCESS) return pollResult;
+      if (pollResult.status === STATUS.FAILURE) throw new Error("Job failed: " + JSON.stringify(pollResult));
+    }
+    throw new Error(`Timed out after ${maxPollAttempts} poll attempts.`);
+  }
+
+  return { generate, submitJob, pollForResult, ASPECT_RATIOS, OUTPUT_RESOLUTIONS, STATUS, DEFAULTS };
+})();
+
 // ===== CONFIGURATION =====
-// Replace with client's actual endpoint when ready
 const CONFIG = {
-  API_ENDPOINT: null, // e.g. 'https://api.hairoriginals.com/hair-analysis-lead'
-  GEMINI_PROXY: null, // e.g. 'https://hair-analysis.workers.dev/analyze'
-  DEMO_MODE: true     // When true, uses mock data and logs to console
+  API_ENDPOINT: null,       // Client's backend endpoint for lead data
+  PIXELBIN_TOKEN: '6677f912-260b-4ff5-9074-9f1485d53c4d',
+  PIXELBIN_ACCESS_KEY: '6ea59e6d-7599-4a8a-8450-d775500b6536',
+  DEMO_MODE: false          // Set to true to use mock data instead of API
 };
 
 /*
@@ -597,6 +670,42 @@ const CONFIG = {
     "expert_callback_requested": boolean
   }
 */
+
+// ===== PIXELBIN UPLOAD HELPER =====
+// Uploads a base64 image to PixelBin and returns the hosted URL
+async function uploadToPixelBin(base64Data) {
+  // Convert base64 to blob
+  const byteString = atob(base64Data.split(',')[1]);
+  const mimeString = base64Data.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+  const blob = new Blob([ab], { type: mimeString });
+
+  // Upload via PixelBin upload API
+  const formData = new FormData();
+  formData.append('file', blob, 'hair-analysis-' + Date.now() + '.jpg');
+  formData.append('path', 'hair-analysis');
+  formData.append('name', 'hair-' + Date.now());
+  formData.append('access', 'public-read');
+  formData.append('overwrite', 'false');
+
+  const response = await fetch('https://api.pixelbin.io/service/platform/assets/v1.0/upload/direct', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + btoa(CONFIG.PIXELBIN_TOKEN),
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Upload failed (${response.status}): ${err}`);
+  }
+
+  const result = await response.json();
+  return result.url;
+}
 
 // ===== CUSTOMER DATA =====
 const customerData = { name: '', phone: '', email: '' };
@@ -761,6 +870,8 @@ function resetUpload() {
   document.getElementById('file-input').value = '';
 }
 
+let pixelBinResult = null; // Store the PixelBin API result
+
 function startAnalysis() {
   // Show analyzing state
   document.querySelector('.s2b-capture-ui').classList.add('hide');
@@ -775,23 +886,69 @@ function startAnalysis() {
     document.getElementById('dots').textContent = '.'.repeat(dotCount);
   }, 400);
 
+  function finishAnalysis() {
+    clearInterval(dotInterval);
+    goTo('s3');
+    setTimeout(() => {
+      document.querySelector('.s2b-capture-ui').classList.remove('hide');
+      analyzing.classList.remove('show');
+    }, 600);
+  }
+
+  function showError(msg) {
+    clearInterval(dotInterval);
+    document.querySelector('.s2b-capture-ui').classList.remove('hide');
+    analyzing.classList.remove('show');
+    alert(msg || 'Analysis failed. Please try again.');
+  }
+
   if (CONFIG.DEMO_MODE) {
     // Simulate API delay then show report with mock data
-    setTimeout(() => {
-      clearInterval(dotInterval);
-      goTo('s3');
-      // Reset capture UI for potential retake
-      setTimeout(() => {
-        document.querySelector('.s2b-capture-ui').classList.remove('hide');
-        analyzing.classList.remove('show');
-      }, 600);
-    }, 3000);
+    setTimeout(finishAnalysis, 3000);
   } else {
-    // TODO: Phase 2 — call CONFIG.GEMINI_PROXY with capturedImageBase64
-    // fetch(CONFIG.GEMINI_PROXY, { method: 'POST', body: JSON.stringify({ image: capturedImageBase64 }) })
-    //   .then(r => r.json())
-    //   .then(data => { clearInterval(dotInterval); renderReport(data); goTo('s3'); })
-    //   .catch(err => { clearInterval(dotInterval); alert('Analysis failed. Please try again.'); });
+    // Real API flow: Upload image → Call NanoBanana2 → Show report
+    (async () => {
+      try {
+        document.querySelector('.s2b-analyze-sub').textContent = 'Uploading your photo...';
+
+        // Step 1: Upload image to PixelBin to get a hosted URL
+        const imageUrl = await uploadToPixelBin(capturedImageBase64);
+        console.log('[Hair Analysis] Image uploaded:', imageUrl);
+
+        document.querySelector('.s2b-analyze-sub').textContent = 'AI is analyzing your hair...';
+
+        // Step 2: Call NanoBanana2 with the image + hair analysis prompt
+        const result = await NanoBanana2.generate(CONFIG.PIXELBIN_TOKEN, {
+          prompt: "Analyze this hair photo. Identify hair health issues like thinning, damage, dryness, split ends, scalp health, frizz, and texture. Generate a detailed clinical hair analysis visualization highlighting problem areas.",
+          images: [imageUrl],
+          aspect_ratio: "3:4",
+          output_resolution: "1K",
+        }, {
+          pollInterval: 3000,
+          onStatusUpdate: (status, data) => {
+            console.log(`[Hair Analysis] PixelBin status: ${status}`);
+            if (status === 'PENDING') {
+              document.querySelector('.s2b-analyze-sub').textContent = 'Processing your hair analysis...';
+            }
+          },
+        });
+
+        console.log('[Hair Analysis] PixelBin result:', result);
+        pixelBinResult = result;
+
+        // Render report with mock analysis data (Gemini integration for text analysis is Phase 2)
+        // The PixelBin result contains the generated/processed image
+        renderReport(mockApiResponse);
+        finishAnalysis();
+
+      } catch (err) {
+        console.error('[Hair Analysis] API error:', err);
+        showError('Analysis failed: ' + err.message + '\nFalling back to demo mode.');
+        // Fallback to mock data on error
+        renderReport(mockApiResponse);
+        finishAnalysis();
+      }
+    })();
   }
 }
 
@@ -853,16 +1010,24 @@ function renderReport(data) {
       </div>`;
   }
 
-  // Hair photo display
+  // Hair photo display — show PixelBin analyzed image if available, otherwise original
   let hairPhoto = '';
-  if (capturedImageBase64) {
+  if (capturedImageBase64 || pixelBinResult) {
+    const analyzedImg = pixelBinResult?.output?.[0] || pixelBinResult?.output?.url || null;
     hairPhoto = `
       <div class="hairmap">
-        <div class="hm-title">Your Hair Photo</div>
+        <div class="hm-title">${analyzedImg ? 'AI-Enhanced Analysis' : 'Your Hair Photo'}</div>
+        <div class="hm-wrap">
+          <img class="hm-img" src="${analyzedImg || capturedImageBase64}" alt="Hair analysis">
+        </div>
+      </div>
+      ${analyzedImg && capturedImageBase64 ? `
+      <div class="hairmap" style="margin-top:0">
+        <div class="hm-title">Original Photo</div>
         <div class="hm-wrap">
           <img class="hm-img" src="${capturedImageBase64}" alt="Your hair">
         </div>
-      </div>`;
+      </div>` : ''}`;
   }
 
   document.getElementById('report-container').innerHTML = `
